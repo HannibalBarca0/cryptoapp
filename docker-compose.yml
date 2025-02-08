@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    depends_on:
+      - postgres
+    environment:
+      # DATABASE_URL is used by Prisma. Adjust the connection string as needed.
+      DATABASE_URL: "postgresql://potgres:postgres@postgres:5432/mydb?schema=public"
+    ports:
+      - "3001:3000"  # Exposing on host port 3001, container uses 3000 (as in Dockerfile)
+    volumes:
+      - ./backend:/usr/src/app
+    command: npm run start
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend  # if your frontend needs to wait for backend; otherwise, remove this dependency
+    ports:
+      - "3000:3000"  # Adjust this if your frontend uses a different port
+    volumes:
+      - ./frontend:/usr/src/app
+    command: npm run start
+
+volumes:
+  pgdata:

@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int          @id @default(autoincrement())
+  email           String       @unique
+  name            String?
+  password        String
+  language        String?      @default("English")
+  darkMode        Boolean?     @default(false)
+  emailVerified   Boolean?     @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  portfolios      Portfolio[]
+  trades          Trade[]
+  wallets         Wallet[]
+  notifications   Notification[]  // Added relation field for Notifications
+}
+
+model Portfolio {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  assetName     String   // e.g., BTC, ETH
+  quantity      Float    // Amount of the asset
+  purchasePrice Float    // Price at which the asset was purchased
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Trade {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  assetName String   // e.g., BTC, ETH
+  tradeType String   // "buy" or "sell"
+  quantity  Float
+  price     Float    // Price at which the trade was executed
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  address     String   @unique // Wallet address
+  type        String   // e.g., MetaMask, Coinbase
+  connectedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String   // Notification message
+  type      String   // e.g., "priceAlert", "portfolioUpdate"
+  read      Boolean? @default(false) // Whether the notification has been read
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
